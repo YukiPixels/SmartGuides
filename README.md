@@ -17,6 +17,10 @@
 * **Reset Defaults:** Restore all settings to their default values instantly.
 * **Persistent Settings:** Your last configuration is automatically saved and reloaded on next launch.
 
+## 🖼️ Preview
+
+![LineUp panel](screenshots/panel.png)
+
 ## 🗂️ Function Types
 
 | Functions | Description |
@@ -24,7 +28,7 @@
 | ✛. **Crosshair** | Draw a centered horizontal and vertical lines with customizable color, thickness and style |
 | ▭. **Frame** | Draw a proportional inner frame with customizable size, color, thickness and style |
 | O. **Ellipse** | Draw a centered ellipse with customizable size, color, thickness and style |
-| X. **Diagonals** | Draw a Corner to corner diagonal lines with customizable color, thickness and style |
+| X. **Diagonals** | Draw a corner to corner diagonal lines with customizable color, thickness and style |
 | #. **Grid** | Draw a regular grid with adjustable size customizable size, color, thickness and style |
 | ⅓. **Rule of Thirds** | Draw a 3×3 composition grid with customizable color, thickness and style |
 | φ. **Golden Ratio** | Draw a Golden Rectangle, Fibonacci Spiral and Golden Circles with customizable color and thickness |
@@ -52,6 +56,7 @@ LineUp is released under the **MIT License** — free for personal and commercia
 
 ## 🔗 Support and Links
 
-* **Itch:** [yukipixels.itch.io](https://yukipixels.itch.io)
+* **Download:** [Latest Release](https://github.com/yukipixels/lineup/releases/latest)
+* **Itch.io:** [yukipixels.itch.io](https://yukipixels.itch.io)
 * **Socials:** [linktr.ee/yukipixels](https://linktr.ee/yukipixels)
 * **Contact:** yukipixels@gmail.com
