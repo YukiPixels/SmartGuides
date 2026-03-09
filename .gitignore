@@ -2,7 +2,7 @@
 luac.out
 
 # LineUp settings file (personal, no need to share)
-lineup_settings.json
+layouts_settings.json
 
 # OS files
 .DS_Store
