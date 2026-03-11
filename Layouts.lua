@@ -1,6 +1,6 @@
 -- Layouts Version 1.0 --
 -- (c)2026 YukiPixels --
--- Visual tools for Aseprite --
+-- A Visual Script made for Aseprite --
 
 ---------------------------
 -- Embedded JSON Library --
@@ -23,16 +23,16 @@ end)()
 -- Constants --
 -----------------
 
-local PHI = (1 + math.sqrt(5)) / 2 
+local PHI = (1 + math.sqrt(5)) / 2
 
 local BASE = {
-    crosshair = " - Crosshair",
-    shape     = " - Frame",
-    thirds    = " - Rule of Thirds",
-    diagonals = " - Diagonals",
-    ellipse   = " - Ellipse",
-    grid      = " - Grid",
-    golden    = " - Golden Ratio",
+    crosshair = "L - Crosshair",
+    shape     = "L - Frame",
+    thirds    = "L - Rule of Thirds",
+    diagonals = "L - Diagonals",
+    ellipse   = "L - Ellipse",
+    grid      = "L - Grid",
+    golden    = "L - Golden Ratio",
 }
 local SETTINGS_FILE = "Layouts_settings.json"
 
@@ -149,28 +149,6 @@ local function drawEllipseShape(img,W,H,cx,cy,rx,ry,color,style,thick)
     end
 end
 
-local function drawArc(img,W,H,cx,cy,r,a0,a1,color,style)
-    if r<1 then return end
-    local steps=math.max(8,math.floor(r*math.abs(a1-a0)*2))
-    local prevX,prevY
-    for i=0,steps do
-        local a=a0+(a1-a0)*i/steps
-        local nx=cx+r*math.cos(a)
-        local ny=cy+r*math.sin(a)
-        -- Fill gaps between steps with Bresenham line
-        if prevX then
-            local dx=math.abs(nx-prevX); local dy=math.abs(ny-prevY)
-            local steps2=math.max(1,math.floor(math.max(dx,dy)))
-            for j=0,steps2 do
-                local fx=prevX+(nx-prevX)*j/steps2
-                local fy=prevY+(ny-prevY)*j/steps2
-                px(img,W,H,fx,fy,color,style)
-            end
-        end
-        prevX=nx; prevY=ny
-    end
-end
-
 ---------------------
 -- Feature Drawing --
 ---------------------
@@ -252,6 +230,19 @@ local function drawGrid(img,sprite,data)
     end
 end
 
+
+-- Flip an image vertically (in-place)
+local function flipVertical(img, W, H)
+    for y=0, math.floor(H/2)-1 do
+        for x=0, W-1 do
+            local top = img:getPixel(x, y)
+            local bot = img:getPixel(x, H-1-y)
+            img:putPixel(x, y,       bot)
+            img:putPixel(x, H-1-y,   top)
+        end
+    end
+end
+
 local function drawGolden(rectImg, spiralImg, circleImg, sprite, data)
     local W,H         = sprite.width, sprite.height
     local rectThick   = math.max(1, data.goldenRectThick)
@@ -261,7 +252,7 @@ local function drawGolden(rectImg, spiralImg, circleImg, sprite, data)
     local rColor      = data.goldenRectColor
     local sColor      = data.FibonacciSpiralColor
     local cColor      = data.goldenCircleColor
-    local levels      = math.max(1, math.min(8, data.goldenLevels))
+    local levels      = math.max(3, math.min(8, data.goldenLevels))
 
     -- Fit largest phi:1 rectangle centered on canvas
     local rx0,ry0,rx1,ry1
@@ -374,7 +365,7 @@ function togglefunctions()
     if not sprite then app.alert("No active sprite.") return end
     local layers,allVis={},true
     for _,l in ipairs(sprite.layers) do
-        if l.name:sub(1,5)==" - " then
+        if l.name:sub(1,3)=="L -" then
             table.insert(layers,l)
             if not l.isVisible then allVis=false end
         end
@@ -402,6 +393,21 @@ function createFunctionsLogic(data,sprite)
             local cel=sprite:newCel(l,app.activeFrame)
             local img=Image(sprite.width,sprite.height); drawShape(img,sprite,data); cel.image=img
         end
+        if data.enableEllipse then
+            local l=getLayer(sprite,BASE.ellipse,true,data.ellipseOpacity,data.ellipseColor)
+            local cel=sprite:newCel(l,app.activeFrame)
+            local img=Image(sprite.width,sprite.height); drawEllipse(img,sprite,data); cel.image=img
+        end
+        if data.enableDiag then
+            local l=getLayer(sprite,BASE.diagonals,true,data.diagOpacity,data.diagColor)
+            local cel=sprite:newCel(l,app.activeFrame)
+            local img=Image(sprite.width,sprite.height); drawDiagonals(img,sprite,data); cel.image=img
+        end
+        if data.enableGrid then
+            local l=getLayer(sprite,BASE.grid,true,data.gridOpacity,data.gridColor)
+            local cel=sprite:newCel(l,app.activeFrame)
+            local img=Image(sprite.width,sprite.height); drawGrid(img,sprite,data); cel.image=img
+        end
         if data.enableThirds then
             local l=getLayer(sprite,BASE.thirds,true,data.thirdsOpacity,data.thirdsColor)
             local cel=sprite:newCel(l,app.activeFrame)
@@ -409,36 +415,25 @@ function createFunctionsLogic(data,sprite)
         end
         if data.enableGolden then
             -- Rectangle layer
-            local lRect=getLayer(sprite," - Golden Rectangle",true,data.goldenOpacity,data.goldenRectColor)
+            local lRect=getLayer(sprite,"L - Golden Rectangle",true,data.goldenOpacity,data.goldenRectColor)
             local celRect=sprite:newCel(lRect,app.activeFrame)
             local imgRect=Image(sprite.width,sprite.height)
-            -- Spiral layer
-            local imgSpiral=Image(sprite.width,sprite.height)
-            local lSpiral=getLayer(sprite," - Fibonacci Spiral",true,data.goldenOpacity,data.FibonacciSpiralColor)
-            local celSpiral=sprite:newCel(lSpiral,app.activeFrame)
             -- Circle layer
             local imgCircle=Image(sprite.width,sprite.height)
-            local lCircle=getLayer(sprite," - Golden Circles",true,data.goldenOpacity,data.goldenCircleColor)
+            local lCircle=getLayer(sprite,"L - Golden Circles",true,data.goldenOpacity,data.goldenCircleColor)
             local celCircle=sprite:newCel(lCircle,app.activeFrame)
+            -- Spiral layer
+            local imgSpiral=Image(sprite.width,sprite.height)
+            local lSpiral=getLayer(sprite,"L - Fibonacci Spiral",true,data.goldenOpacity,data.FibonacciSpiralColor)
+            local celSpiral=sprite:newCel(lSpiral,app.activeFrame)
             drawGolden(imgRect,imgSpiral,imgCircle,sprite,data)
+            local W,H=sprite.width,sprite.height
+            flipVertical(imgRect,   W, H)
+            flipVertical(imgSpiral, W, H)
+            flipVertical(imgCircle, W, H)
             celRect.image=imgRect
             celSpiral.image=imgSpiral
             celCircle.image=imgCircle
-        end
-        if data.enableDiag then
-            local l=getLayer(sprite,BASE.diagonals,true,data.diagOpacity,data.diagColor)
-            local cel=sprite:newCel(l,app.activeFrame)
-            local img=Image(sprite.width,sprite.height); drawDiagonals(img,sprite,data); cel.image=img
-        end
-        if data.enableEllipse then
-            local l=getLayer(sprite,BASE.ellipse,true,data.ellipseOpacity,data.ellipseColor)
-            local cel=sprite:newCel(l,app.activeFrame)
-            local img=Image(sprite.width,sprite.height); drawEllipse(img,sprite,data); cel.image=img
-        end
-        if data.enableGrid then
-            local l=getLayer(sprite,BASE.grid,true,data.gridOpacity,data.gridColor)
-            local cel=sprite:newCel(l,app.activeFrame)
-            local img=Image(sprite.width,sprite.height); drawGrid(img,sprite,data); cel.image=img
         end
     end)
 
@@ -493,7 +488,7 @@ function createFunctions()
         enableThirds=false,    thirdsColor=Color{r=255,g=210,b=0,alpha=255},
         thirdsOpacity=255, thirdsThickness=2, thirdsStyle="Solid",
         enableGolden=false,    goldenLevels=6,
-        goldenRectColor=Color{r=255,g=255,b=255,alpha=255},    goldenRectThick=2,
+        goldenRectColor=Color{r=0,g=0,b=0,alpha=255},          goldenRectThick=2,
         FibonacciSpiralColor=Color{r=255,g=60,b=100,alpha=255},  FibonacciSpiralThick=2,
         goldenCircleColor=Color{r=0,g=180,b=255,alpha=255},   goldenCircleThick=2,
         goldenOpacity=255,
@@ -501,7 +496,7 @@ function createFunctions()
         diagOpacity=255, diagThickness=2, diagStyle="Solid",
         enableEllipse=false,   ellipseSize=80, ellipseColor=Color{r=50,g=100,b=250,alpha=255},
         ellipseOpacity=255, ellipseThickness=2, ellipseStyle="Solid",
-        enableGrid=false,      gridCellW=16,             gridThick=2, gridColor=Color{r=0,g=0,b=0,alpha=255},
+        enableGrid=false,      gridCellW=16,             gridThick=2, gridColor=Color{r=255,g=255,b=255,alpha=255},
         gridOpacity=255, gridStyle="Solid",
     }
 
@@ -598,18 +593,18 @@ function createFunctions()
 
     dlg:separator{text="φ  Golden Ratio"}
     dlg:check   {id="enableGolden",      label="Enable",             selected=cfg.enableGolden}
-    dlg:slider  {id="goldenLevels",      label="Depth",              min=1,max=8,  value=cfg.goldenLevels}
+    dlg:slider  {id="goldenLevels",      label="Count",              min=3,max=8,  value=cfg.goldenLevels}
     dlg:slider  {id="goldenOpacity",     label="Opacity",            min=0,max=255,value=cfg.goldenOpacity}
     dlg:separator{text="  Golden Rectangle"}
     dlg:color   {id="goldenRectColor",   label="Color",              color=cfg.goldenRectColor}
     dlg:slider  {id="goldenRectThick",   label="Thickness",          min=1,max=12, value=cfg.goldenRectThick}
-    dlg:separator{text="  Fibonacci Spiral"}
-    dlg:color   {id="FibonacciSpiralColor", label="Color",              color=cfg.FibonacciSpiralColor}
-    dlg:slider  {id="FibonacciSpiralThick", label="Thickness",          min=1,max=12, value=cfg.FibonacciSpiralThick}
     dlg:separator{text="  Golden Circles"}
     dlg:color   {id="goldenCircleColor", label="Color",              color=cfg.goldenCircleColor}
     dlg:slider  {id="goldenCircleThick", label="Thickness",          min=1,max=12, value=cfg.goldenCircleThick}
 
+    dlg:separator{text="  Fibonacci Spiral"}
+    dlg:color   {id="FibonacciSpiralColor", label="Color",              color=cfg.FibonacciSpiralColor}
+    dlg:slider  {id="FibonacciSpiralThick", label="Thickness",          min=1,max=12, value=cfg.FibonacciSpiralThick}
     dlg:separator{}
     dlg:newrow()
     dlg:button{id="reset",text="  Reset Defaults  ",onclick=function()
